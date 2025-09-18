@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Kalkulator GCD Euclid</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e2e">
+
+    <style>
+        /* Mengimpor Font dari Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&display=swap');
+
+        /* Variabel Warna (Tema Catppuccin) */
+        :root {
+            --bg-color: #1e1e2e;
+            --fg-color: #cdd6f4;
+            --btn-color: #89b4fa;
+            --entry-bg: #313244;
+            --result-bg: #181825;
+            --accent-color: #cba6f7;
+            --conclusion-fg: #a6e3a1;
+            --btn-text-color: #1e1e2e;
+        }
+
+        /* Reset & Pengaturan Dasar */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--fg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Judul */
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* Area Input */
+        .input-frame {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            background-color: var(--entry-bg);
+            color: var(--fg-color);
+            border: 1px solid var(--entry-bg);
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        /* Hilangkan panah di input number */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+
+        button {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            background-color: var(--btn-color);
+            color: var(--btn-text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+        }
+        
+        /* Area Hasil */
+        .result-card {
+            background-color: var(--result-bg);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: left;
+            white-space: pre-wrap; /* Agar baris baru dan spasi terbaca */
+            line-height: 1.6;
+        }
+        
+        .h1-style {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin: 15px 0 10px 0;
+        }
+
+        .code-style {
+            font-family: 'Fira Code', monospace;
+            color: var(--fg-color);
+            margin-left: 15px;
+        }
+        
+        .conclusion-style {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--conclusion-fg);
+            text-align: center;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Kalkulator Algoritma Euclid</h1>
+
+        <div class="input-frame">
+            <div class="input-group">
+                <label for="numA">Bilangan Pertama</label>
+                <input type="number" id="numA" placeholder="Contoh: 84">
+            </div>
+            <div class="input-group">
+                <label for="numB">Bilangan Kedua</label>
+                <input type="number" id="numB" placeholder="Contoh: 35">
+            </div>
+        </div>
+
+        <button id="calculateBtn">HITUNG GCD</button>
+
+        <div class="result-card" id="resultCard" style="display: none;">
+            </div>
+    </div>
+    
+    <script>
+        // --- LOGIKA APLIKASI (Terjemahan dari Python ke JavaScript) ---
+
+        function getEuclideanSteps(a, b) {
+            const steps = [];
+            while (b !== 0) {
+                const q = Math.floor(a / b);
+                const r = a % b;
+                steps.push({ a, b, q, r });
+                [a, b] = [b, r];
+            }
+            return steps;
+        }
+
+        function generateLinearCombinationDisplay(steps, originalA, originalB) {
+            if (steps.length === 0) {
+                if (originalA === 0) return { x: 0, y: 1, text: `0 × (${originalA}) + 1 × (${originalB}) = ${originalB}` };
+                if (originalB === 0) return { x: 1, y: 0, text: `1 × (${originalA}) + 0 × (${originalB}) = ${originalA}` };
+            }
+
+            const lastStep = steps[steps.length - 1];
+            const gcd = lastStep.b;
+            let [c1, n1] = [1, lastStep.a];
+            let [c2, n2] = [-lastStep.q, lastStep.b];
+            let displaySteps = [`${gcd} = ${n1} - ${lastStep.q} × ${n2}`];
+
+            for (let i = steps.length - 2; i >= 0; i--) {
+                const step = steps[i];
+                displaySteps.push(`  = ${c1} × (${n1}) + ${c2} × (${step.a} - ${step.q} × ${step.b})`);
+                
+                let newC1 = c2;
+                let newC2 = c1 - c2 * step.q;
+                [c1, c2] = [newC1, newC2];
+                [n1, n2] = [step.a, step.b];
+                displaySteps.push(`  = ${c1} × (${n1}) + ${c2} × (${n2})`);
+            }
+
+            const final_text = displaySteps.join('\n');
+            let x, y;
+            if (n1 === originalA) {
+                [x, y] = [c1, c2];
+            } else {
+                [x, y] = [c2, c1];
+            }
+            return { x, y, text: final_text };
+        }
+
+        // --- PENGHUBUNG TAMPILAN DAN LOGIKA ---
+
+        const numA_input = document.getElementById('numA');
+        const numB_input = document.getElementById('numB');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultCard = document.getElementById('resultCard');
+
+        calculateBtn.addEventListener('click', () => {
+            const numA = parseInt(numA_input.value);
+            const numB = parseInt(numB_input.value);
+
+            if (isNaN(numA) || isNaN(numB)) {
+                alert("Harap masukkan bilangan bulat yang valid.");
+                return;
+            }
+            
+            resultCard.style.display = 'block';
+            resultCard.innerHTML = ''; // Kosongkan hasil sebelumnya
+
+            const a = Math.max(numA, numB);
+            const b = Math.min(numA, numB);
+
+            const euclidSteps = getEuclideanSteps(a, b);
+            const gcd = (b === 0) ? a : euclidSteps[euclidSteps.length - 1].b;
+
+            // Tampilkan Langkah Euclid
+            let htmlContent = `<div class="h1-style">Langkah-langkah Algoritma Euclid:</div>`;
+            euclidSteps.forEach(step => {
+                htmlContent += `<div class="code-style">${step.a} = ${step.q} × ${step.b} + ${step.r}</div>`;
+            });
+
+            // Tampilkan Kesimpulan
+            htmlContent += `<div class="conclusion-style">Karena sisa pembagian terakhir adalah 0,<br>maka GCD dari (${numA}, ${numB}) adalah sisa sebelumnya, yaitu ${gcd}.</div>`;
+
+            // Tampilkan Kombinasi Linear
+            const { x, y, text } = generateLinearCombinationDisplay(euclidSteps, numA, numB);
+            htmlContent += `<div class="h1-style">Sehingga ${gcd} dapat kita tulis sebagai:</div>`;
+            htmlContent += `<div class="code-style">${text}</div>`;
+            
+            resultCard.innerHTML = htmlContent;
+        });
+
+    </script>
+    <script>
+      // Service worker untuk PWA
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('Service Worker berhasil didaftarkan.'))
+          .catch(error => console.log('Pendaftaran Service Worker gagal:', error));
+      }
+    </script>
+</body>
+</html>
