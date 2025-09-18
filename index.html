@@ -84,7 +84,6 @@
             text-align: center;
         }
         
-        /* Hilangkan panah di input number */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
           -webkit-appearance: none;
@@ -115,14 +114,13 @@
             background-color: var(--accent-color);
         }
         
-        /* Area Hasil */
         .result-card {
             background-color: var(--result-bg);
             border-radius: 8px;
             padding: 25px;
             margin-top: 30px;
             text-align: left;
-            white-space: pre-wrap; /* Agar baris baru dan spasi terbaca */
+            white-space: pre-wrap;
             line-height: 1.6;
         }
         
@@ -169,13 +167,10 @@
 
         <button id="calculateBtn">HITUNG GCD</button>
 
-        <div class="result-card" id="resultCard" style="display: none;">
-            </div>
+        <div class="result-card" id="resultCard" style="display: none;"></div>
     </div>
     
     <script>
-        // --- LOGIKA APLIKASI (Terjemahan dari Python ke JavaScript) ---
-
         function getEuclideanSteps(a, b) {
             const steps = [];
             while (b !== 0) {
@@ -187,40 +182,55 @@
             return steps;
         }
 
-        function generateLinearCombinationDisplay(steps, originalA, originalB) {
-            if (steps.length === 0) {
-                if (originalA === 0) return { x: 0, y: 1, text: `0 × (${originalA}) + 1 × (${originalB}) = ${originalB}` };
-                if (originalB === 0) return { x: 1, y: 0, text: `1 × (${originalA}) + 0 × (${originalB}) = ${originalA}` };
-            }
-
-            const lastStep = steps[steps.length - 1];
-            const gcd = lastStep.b;
-            let [c1, n1] = [1, lastStep.a];
-            let [c2, n2] = [-lastStep.q, lastStep.b];
-            let displaySteps = [`${gcd} = ${n1} - ${lastStep.q} × ${n2}`];
-
-            for (let i = steps.length - 2; i >= 0; i--) {
-                const step = steps[i];
-                displaySteps.push(`  = ${c1} × (${n1}) + ${c2} × (${step.a} - ${step.q} × ${step.b})`);
-                
-                let newC1 = c2;
-                let newC2 = c1 - c2 * step.q;
-                [c1, c2] = [newC1, newC2];
-                [n1, n2] = [step.a, step.b];
-                displaySteps.push(`  = ${c1} × (${n1}) + ${c2} × (${n2})`);
-            }
-
-            const final_text = displaySteps.join('\n');
+        function generateLinearCombinationDisplay(steps, originalA, originalB, gcd) {
             let x, y;
-            if (n1 === originalA) {
-                [x, y] = [c1, c2];
-            } else {
-                [x, y] = [c2, c1];
-            }
-            return { x, y, text: final_text };
-        }
+            let displayText = "";
 
-        // --- PENGHUBUNG TAMPILAN DAN LOGIKA ---
+            if (steps.length < 2) { 
+                if (originalA % originalB === 0) { x = 0; y = 1; } 
+                else if (originalB % originalA === 0) { x = 1; y = 0; } 
+                else if (originalB === 0) { x = 1; y = 0; } 
+                else if (originalA === 0) { x = 0; y = 1; }
+                else { 
+                    x = 1;
+                    y = -steps[0].q;
+                    if (originalA !== steps[0].a) [x, y] = [y, x];
+                }
+                // [DIKOREKSI] Baris ini diubah untuk kasus sederhana
+                displayText = `${gcd} = (${x}) × (${originalA}) + (${y}) × (${originalB})`;
+
+            } else { 
+                const starting_step = steps[steps.length - 2];
+                let [c1, n1] = [1, starting_step.a];
+                let [c2, n2] = [-starting_step.q, starting_step.b];
+                
+                let displaySteps = [`${gcd} = (${starting_step.a}) - (${starting_step.q}) × (${starting_step.b})`];
+                
+                for (let i = steps.length - 3; i >= 0; i--) {
+                    const step = steps[i];
+                    displaySteps.push(`  = (${c1}) × (${n1}) + (${c2}) × ((${step.a}) - (${step.q}) × (${step.b}))`);
+                    
+                    let newC1 = c2;
+                    let newC2 = c1 - c2 * step.q;
+                    [c1, c2] = [newC1, newC2];
+                    [n1, n2] = [step.a, step.b];
+                    
+                    if (i === 0) {
+                        let final_x, final_y;
+                        if (n1 === originalA) {
+                            [final_x, final_y] = [c1, c2];
+                        } else {
+                            [final_y, final_x] = [c1, c2];
+                        }
+                        displaySteps.push(`  = (${final_x}) × (${originalA}) + (${final_y}) × (${originalB})`);
+                    } else {
+                        displaySteps.push(`  = (${c1}) × (${n1}) + (${c2}) × (${n2})`);
+                    }
+                }
+                displayText = displaySteps.join('\n');
+            }
+            return { text: displayText };
+        }
 
         const numA_input = document.getElementById('numA');
         const numB_input = document.getElementById('numB');
@@ -237,31 +247,34 @@
             }
             
             resultCard.style.display = 'block';
-            resultCard.innerHTML = ''; // Kosongkan hasil sebelumnya
+            resultCard.innerHTML = '';
 
             const a = Math.max(numA, numB);
             const b = Math.min(numA, numB);
 
             const euclidSteps = getEuclideanSteps(a, b);
-            const gcd = (b === 0) ? a : euclidSteps[euclidSteps.length - 1].b;
+            
+            let gcd;
+            if (b === 0) {
+                gcd = a;
+            } else {
+                const lastStep = euclidSteps[euclidSteps.length - 1];
+                gcd = lastStep.b;
+            }
 
-            // Tampilkan Langkah Euclid
             let htmlContent = `<div class="h1-style">Langkah-langkah Algoritma Euclid:</div>`;
             euclidSteps.forEach(step => {
                 htmlContent += `<div class="code-style">${step.a} = ${step.q} × ${step.b} + ${step.r}</div>`;
             });
 
-            // Tampilkan Kesimpulan
             htmlContent += `<div class="conclusion-style">Karena sisa pembagian terakhir adalah 0,<br>maka GCD dari (${numA}, ${numB}) adalah sisa sebelumnya, yaitu ${gcd}.</div>`;
 
-            // Tampilkan Kombinasi Linear
-            const { x, y, text } = generateLinearCombinationDisplay(euclidSteps, numA, numB);
+            const { text } = generateLinearCombinationDisplay(euclidSteps, numA, numB, gcd);
             htmlContent += `<div class="h1-style">Sehingga ${gcd} dapat kita tulis sebagai:</div>`;
             htmlContent += `<div class="code-style">${text}</div>`;
             
             resultCard.innerHTML = htmlContent;
         });
-
     </script>
     <script>
       // Service worker untuk PWA
